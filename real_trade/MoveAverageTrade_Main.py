@@ -12,7 +12,6 @@ from datetime import timedelta
 import dateutil.parser
 
 from ChartUpdaterByCCWebsocket import ChartUpdaterByCoincheckWS
-from ChartUpdaterByBinanceWebsocket import ChartUpdaterByBinanceWS
 from MoveAverageTradePosition import OnePositionTrader
 from ChartBars import Chart
 from TechnicalCalculator import TechnicalCalculator
@@ -24,7 +23,13 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), "api"))
 
 import coincheck.coincheck
-import binance_api.binance_api
+
+GLOBAL_LOCK_PROCESS_ONE_FRAME = threading.Lock()
+LATEST_FREEZED_BAR = {}
+
+GLOBAL_IS_TEST_BOT=False
+
+GLOBAL_STOP_MAKE_POSITION_FILE=None
 
 def query_margin(api_inst, symbols=["jpy"]):
     balance_ret_str = api_inst.account.balance()
@@ -199,12 +204,6 @@ def update_all_status_by_api(api, currencies, pairs):
 
     return margin, leverage_margin, positions, transactions, orders
 
-GLOBAL_LOCK_PROCESS_ONE_FRAME = threading.Lock()
-LATEST_FREEZED_BAR = {}
-
-GLOBAL_IS_TEST_BOT=False
-
-GLOBAL_STOP_MAKE_POSITION_FILE=None
 
 # "target_symbol": if None, all symbols are checked
 def process_status_and_orders(api, chart_updater, target_symbol, position_traders, lots, recursive_called = False):
@@ -260,8 +259,9 @@ def process_status_and_orders(api, chart_updater, target_symbol, position_trader
                 max_margin_to_test['btc'] = 0.01
                 print("!!!!!!!!!!!!!!!!!!!BOT IS TEST MODE: max_margin_jpy = %f!!!!!!!!!!!!!!!!!!!!!!" % max_margin_to_test['jpy'])
                 print("!!!!!!!!!!!!!!!!!!!BOT IS TEST MODE: max_margin_btc = %f!!!!!!!!!!!!!!!!!!!!!!" % max_margin_to_test['btc'])
-                leverage_margin['jpy'] = min(max_margin_to_test['jpy'], leverage_margin['jpy'])
-                leverage_margin['jpy'] = min(max_margin_to_test['btc'], leverage_margin['btc'])
+                leverage_margin['jpy'] = min(max_margin_to_test['jpy'], float(leverage_margin['jpy']))
+                if 'btc' in leverage_margin:
+                    leverage_margin['btc'] = min(max_margin_to_test['btc'], float(leverage_margin['btc']))
                 if 'jpy' in margin:
                     margin['jpy'] = min(max_margin_to_test['jpy'], margin['jpy'])
                 if 'btc' in margin:
@@ -280,6 +280,7 @@ def process_status_and_orders(api, chart_updater, target_symbol, position_trader
                 currency = position.get_base_currency()
                 # set usable money
                 if position.use_leverage:
+                    leverage_margin[currency] = float(leverage_margin[currency])
                     position.set_max_total_position_price_base(lots[pos_i]*leverage_margin[currency])
                     position.set_max_free_margin_of_base_currency(lots[pos_i]*leverage_margin[currency])
                 else:
@@ -404,6 +405,9 @@ def select_api_and_chartupdater(trade_center_name, bar_minutes, technical_calcul
 
     
     elif trade_center_name == "binance":
+        import binance_api.binance_api
+        from ChartUpdaterByBinanceWebsocket import ChartUpdaterByBinanceWS
+    
         accessKey = None
         secretKey = None
         with open("keys/binance.txt", "r") as fr:
@@ -421,16 +425,7 @@ def select_api_and_chartupdater(trade_center_name, bar_minutes, technical_calcul
 
     return None, None
 
-    
-if __name__ == "__main__":
-    
-    # 0.initialize coincheck instance
-    # 1.Run updater (ccws)
-    # 2.call freeze updater (main thread)
-    # 3.set sashine via cc api according to chart
-
-    # remain impl class
-    # => PositionManager (set sashine and sell created position and forbid somes)
+def main():
     parser = argparse.ArgumentParser(description='Move Average Algorithm Main')
     parser.add_argument('--config_json', type=str, default=None,
                         help="Set the config file instead of set parameters directly")
@@ -580,4 +575,6 @@ if __name__ == "__main__":
         process_status_and_orders(api, chart_updater, None, position_traders, lots)
         time.sleep(9.5)  # 
 
+if __name__ == "__main__":
+    main()
 
