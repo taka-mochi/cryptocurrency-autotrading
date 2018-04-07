@@ -427,7 +427,7 @@ def select_api_and_chartupdater(trade_center_name, bar_minutes, technical_calcul
 
 def main():
     parser = argparse.ArgumentParser(description='Move Average Algorithm Main')
-    parser.add_argument('--config_json', type=str, default=None,
+    parser.add_argument('--config_json', type=str, default=None, required=True,
                         help="Set the config file instead of set parameters directly")
     parser.add_argument('--check_stop_make_position_file', type=str, default=None)
     parser.add_argument('--bar_minutes', type=int, required=True,
