@@ -1,0 +1,3 @@
+[submodule "real_trade/api/coincheck-python"]
+	path = real_trade/api/coincheck-python
+	url = https://github.com/coincheckjp/coincheck-python

@@ -1,0 +1,10 @@
+*.csv
+*.py~
+*.*~
+*.pyc
+.DS_Store
+add_diverge_rate
+make_bar
+multiply_bars
+simulation_results/
+raw_data/
