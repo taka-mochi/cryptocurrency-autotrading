@@ -1,5 +1,6 @@
-cryptocurrency-autotrading
-==========
+# cryptocurrency-autotrading
+
+---
 
 ※Japanese follows after English.
 
@@ -62,7 +63,7 @@ Details:
 Except for external libraries and resources, this software is released under the New BSD License, see LICENSE.txt.
 External libraries and resources which are used in this project inherit their original license.
 
-==========
+---
 
 日本語版README
 
@@ -123,5 +124,4 @@ External libraries and resources which are used in this project inherit their or
 外部ライブラリを除き、BSDライセンスに準拠します。詳細は LICENSE.txt をご覧ください。
 外部ライセンスに関してはオリジナルのライセンスを継承します。
 
-==========
 
